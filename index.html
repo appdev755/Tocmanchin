@@ -304,7 +304,7 @@ Object.entries(BADGES).forEach(([id,b])=>{h+='<div class="item'+(S.badges.includ
 h+='</div><div class="sec">Statistiques</div><div class="xpt">Victoires : '+S.wins+' · Série du défi : 🔥 '+curStreak()+' jour(s)</div>';
 $('profile').innerHTML=h}
 /* jeu en ligne : pseudos, adversaire aléatoire, classement (Firebase Realtime Database) */
-const ONLINE={db:''}; /* ← colle ici l’adresse de ta base Firebase quand elle sera créée */
+const ONLINE={db:'https://tocmanchin-default-rtdb.europe-west1.firebasedatabase.app'}; /* ← colle ici l’adresse de ta base Firebase quand elle sera créée */
 const NET={on:false,gid:'',me:0,first:1,applied:0,poll:null,mq:null,find:0,last:0,done:0,edit:0};
 const dbOn=()=>!!ONLINE.db;
 const esc=t=>String(t).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
