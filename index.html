@@ -86,6 +86,7 @@ background:radial-gradient(circle at 28% 30%,#00c2a8 0 9px,transparent 10px),rad
 .xpt{font-weight:800;font-size:13px;text-align:center}
 .toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);left:50%;transform:translate(-50%,-160%);background:#2a1a5e;color:#fff;padding:10px 18px;border-radius:20px;font-weight:900;z-index:20;transition:transform .35s;box-shadow:0 4px 12px rgba(0,0,0,.3);text-align:center;max-width:90%}.toast.on{transform:translate(-50%,0)}
 .tile.dy{background:linear-gradient(135deg,#ff9a1a,#ff3d8b)}.tile.ol{background:linear-gradient(135deg,#2f6bff,#7b3fe4)}.tile b{font-size:17px}.tile.big b{font-size:26px}
+.av{font-size:20px}
 .fxp{animation:fxp 1s ease-out forwards;transform-box:fill-box;transform-origin:center}
 @keyframes fxp{from{transform:translate(0,0) scale(.3);opacity:1}to{transform:translate(var(--dx),var(--dy)) scale(1.3);opacity:0}}
 .ad{width:100%;max-width:340px;min-height:50px;margin:8px 0 2px;border-radius:10px;background:repeating-linear-gradient(45deg,#ffffff88 0 8px,#ffffff44 8px 16px);border:2px dashed #7b3fe4aa;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#5b4a9a}
@@ -141,15 +142,15 @@ background:radial-gradient(circle at 28% 30%,#00c2a8 0 9px,transparent 10px),rad
 <div id="game" class="screen">
 <div class="top"><button class="ic" onclick="toMenu()">‹</button><div id="info"></div><button class="ic" id="pauseb" onclick="pause(true)">❚❚</button></div>
 <div class="cards">
-<div class="card" id="c1"><div class="av" style="background:var(--p1)">A</div><div><div class="nm"><span id="n1">Joueur 1</span> <small id="tt1"></small></div><div class="sc" id="s1">0</div><div class="tb"><i id="tb1"></i></div></div></div>
-<div class="card" id="c2"><div class="av" style="background:var(--p2)">I</div><div><div class="nm"><span id="n2">Invité</span> <small id="tt2"></small></div><div class="sc" id="s2">0</div><div class="tb"><i id="tb2"></i></div></div></div>
+<div class="card" id="c1"><div class="av" id="av1" style="background:var(--p1)">A</div><div><div class="nm"><span id="n1">Joueur 1</span> <small id="tt1"></small></div><div class="sc" id="s1">0</div><div class="tb"><i id="tb1"></i></div></div></div>
+<div class="card" id="c2"><div class="av" id="av2" style="background:var(--p2)">I</div><div><div class="nm"><span id="n2">Invité</span> <small id="tt2"></small></div><div class="sc" id="s2">0</div><div class="tb"><i id="tb2"></i></div></div></div>
 </div>
 <div id="msg"></div>
 <div class="sheet"><svg id="board" viewBox="0 0 460 510" preserveAspectRatio="xMidYMid meet"><g id="bd"></g><g id="fxg"></g></svg>
 <div class="ov" id="ovp"><h2>⏸ Pause</h2><button class="btn main" onclick="pause(false)">Reprendre</button><button class="btn ghost" onclick="toMenu()">Menu</button></div>
-<div class="ov" id="ove"><h2 id="eh"></h2><div id="et" style="font-size:22px;font-weight:900;margin-bottom:6px"></div><div id="er" style="font-weight:800;margin-bottom:10px"></div><button class="btn gold" id="dbl" style="display:none" onclick="dblCoins()">📺 Doubler les pièces</button><button class="btn main" id="nextb" onclick="next()">Manche suivante ▶</button><button class="btn ghost" onclick="toMenu()">Menu</button></div>
+<div class="ov" id="ove"><h2 id="eh"></h2><div id="et" style="font-size:22px;font-weight:900;margin-bottom:6px"></div><div id="er" style="font-weight:800;margin-bottom:10px"></div><button class="btn gold" id="dbl" style="display:none" onclick="dblCoins()">📺 Doubler les pièces</button><button class="btn alt" id="rvb" style="display:none" onclick="acceptRematch()">⚔️ Accepter la revanche</button><button class="btn main" id="nextb" onclick="next()">Manche suivante ▶</button><button class="btn ghost" onclick="toMenu()">Menu</button></div>
 </div>
-<div class="tools"><button class="btn gold" id="hintb" onclick="hint()">💡 Indice (pub)</button></div>
+<div class="tools"><button class="btn gold" id="hintb" onclick="hint()">💡 Indice (pub)</button><button class="btn" id="micb" style="display:none;background:#2f6bff" onclick="toggleMic()">🎤 Micro : off</button></div>
 <div class="ad" data-ad="banner"></div>
 </div>
 
@@ -174,8 +175,8 @@ function show(w){$('home').style.display=w==='home'?'flex':'none';$('levels').st
 function scr(n){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(n).classList.add('on')}
 function toMenu(){pause(false);busy=true;stopTimer();refreshMenu();leaveOnline();$('ove').classList.remove('on');scr('menu');show('home')}
 function start(m,l){leaveOnline();mode=m;lvl=l;manche=0;$('n2').textContent=m==='ai'?'Invité (IA)':m==='daily'?'Obstacles':'Joueur 2';reset();scr('game')}
-function reset(){manche++;board=Array(N).fill(0);sc=[0,0,0];won=[];turn=Math.random()<.5?1:2;over=false;busy=false;Gearn=0;$('er').textContent='';$('dbl').style.display='none';$('nextb').textContent=mode==='daily'?'Réessayer ↻':'Manche suivante ▶';if(mode==='daily'){turn=1;dailySetup()}if(mode==='net')turn=NET.first;hintI=-1;last=-1;$('ove').classList.remove('on');$('hintb').style.display=ADS.enabled&&ADS.rewarded&&mode!=='net'?'':'none';draw();startTurn();if(mode==='ai'&&turn===2){busy=true;setTimeout(ai,900)}}
-function next(){const go=()=>mode==='net'?(leaveOnline(),openOnline(),findMatch()):reset();if(ADS.enabled&&manche%ADS.interEvery===0)showAd(go);else go()}
+function reset(){manche++;board=Array(N).fill(0);sc=[0,0,0];won=[];turn=Math.random()<.5?1:2;over=false;busy=false;Gearn=0;$('er').textContent='';$('dbl').style.display='none';$('nextb').textContent=mode==='daily'?'Réessayer ↻':'Manche suivante ▶';if(mode==='daily'){turn=1;dailySetup()}if(mode==='net')turn=NET.first;$('micb').style.display=mode==='net'?'':'none';hintI=-1;last=-1;$('ove').classList.remove('on');$('hintb').style.display=ADS.enabled&&ADS.rewarded&&mode!=='net'?'':'none';draw();startTurn();if(mode==='ai'&&turn===2){busy=true;setTimeout(ai,900)}}
+function next(){const go=()=>mode==='net'?netNext():reset();if(ADS.enabled&&manche%ADS.interEvery===0)showAd(go);else go()}
 function pause(v){paused=v;$('ovp').classList.toggle('on',v)}
 function count(p,i){return AT[i].filter(q=>q.every(k=>k===i||board[k]===p))}
 function alive(q){const a=q.some(k=>board[k]===1),b=q.some(k=>board[k]===2);if(a&&b)return false;return !(q.every(k=>board[k]===1)||q.every(k=>board[k]===2))}
@@ -184,7 +185,7 @@ s.forEach(q=>won.push({p:turn,q,n:1}));sc[turn]+=s.length;if(s.length)sfx.square
 $('s'+turn).classList.remove('bump');void $('s'+turn).offsetWidth;if(s.length)$('s'+turn).classList.add('bump');
 if(!SQ.some(alive)||board.every(v=>v)){over=true;draw();finish();return}
 turn=3-turn;draw();if(mode==='ai'&&turn===2){busy=true;setTimeout(ai,600)}else busy=false;startTurn()}
-function finish(){const t=sc[1]===sc[2]?'🤝 Égalité !':'🏆 '+(sc[1]>sc[2]?$('n1').textContent:$('n2').textContent)+' gagne !';$('eh').textContent=t;$('et').textContent=sc[1]+' – '+sc[2];$('er').textContent=rewardEnd();setTimeout(()=>{$('ove').classList.add('on');(sc[1]===sc[2]?sfx.click():((mode==='ai'&&sc[2]>sc[1])?sfx.lose():sfx.win()))},700)}
+function finish(){const t=sc[1]===sc[2]?'🤝 Égalité !':'🏆 '+(sc[1]>sc[2]?$('n1').textContent:$('n2').textContent)+' gagne !';$('eh').textContent=t;$('et').textContent=sc[1]+' – '+sc[2];$('er').textContent=rewardEnd();if(mode==='net')netMsg(sc[NET.me]>sc[3-NET.me]?1:sc[NET.me]<sc[3-NET.me]?-1:0);setTimeout(()=>{$('ove').classList.add('on');(sc[1]===sc[2]?sfx.click():((mode==='ai'&&sc[2]>sc[1])?sfx.lose():sfx.win()))},700)}
 function pick(level){const em=[];board.forEach((v,i)=>{if(!v)em.push(i)});
 if(Math.random()<[1,.5,.2,.05,0][level])return em[Math.random()*em.length|0];
 let best=-1,bs=-1e9;
@@ -299,13 +300,14 @@ h+='<button class="item'+(eq?' eq':'')+'" onclick="buy(\''+k+'\',\''+it[0]+'\')"
 $('shop').innerHTML=h}
 function buy(k,id){const it=SHOP[k].find(x=>x[0]===id);if(!S.own.includes(id)){if(S.coins<it[3]){toast('Pas assez de pièces 🪙');return}S.coins-=it[3];S.own.push(id);sfx.square()}S.eq[k]=id;save();applyEquip();renderShop();refreshMenu()}
 function renderProfile(){const r=rankOf(S.xp),nx=RANKS[r+1],base=RANKS[r][1],pct=nx?Math.round((S.xp-base)/(nx[1]-base)*100):100;
-let h='<div class="top"><button class="ic" onclick="toMenu()">‹</button><b>👤 Mon profil</b><span class="pill2">🪙 '+S.coins+'</span></div><div class="rk">🎓 '+RANKS[r][0]+'</div>'+(S.name?'<div class="xpt">@'+esc(S.name)+'</div>':'<button class="btn ghost" style="font-size:14px;padding:8px;max-width:240px" onclick="openOnline()">Choisir un pseudo</button>')+'<div class="xpb"><i style="width:'+pct+'%"></i></div><div class="xpt">'+S.xp+' XP'+(nx?' · prochain rang : '+nx[0]+' à '+nx[1]+' XP':' · rang maximum !')+'</div><div class="sec">Badges</div><div class="shopgrid">';
+let h='<div class="top"><button class="ic" onclick="toMenu()">‹</button><b>👤 Mon profil</b><span class="pill2">🪙 '+S.coins+'</span></div><div class="rk">🎓 '+RANKS[r][0]+'</div>'+(S.name?'<div class="xpt" style="font-size:22px">'+esc(S.av||'😎')+' @'+esc(S.name)+'</div>':'<button class="btn ghost" style="font-size:14px;padding:8px;max-width:240px" onclick="openOnline()">Choisir un pseudo</button>')+'<div class="xpb"><i style="width:'+pct+'%"></i></div><div class="xpt">'+S.xp+' XP'+(nx?' · prochain rang : '+nx[0]+' à '+nx[1]+' XP':' · rang maximum !')+'</div><div class="sec">Badges</div><div class="shopgrid">';
 Object.entries(BADGES).forEach(([id,b])=>{h+='<div class="item'+(S.badges.includes(id)?' eq':' off')+'"><i class="sw">'+b[0]+'</i><b>'+b[1]+'</b></div>'});
 h+='</div><div class="sec">Statistiques</div><div class="xpt">Victoires : '+S.wins+' · Série du défi : 🔥 '+curStreak()+' jour(s)</div>';
 $('profile').innerHTML=h}
-/* jeu en ligne : pseudos, adversaire aléatoire, classement (Firebase Realtime Database) */
-const ONLINE={db:'https://tocmanchin-default-rtdb.europe-west1.firebasedatabase.app'}; /* ← colle ici l’adresse de ta base Firebase quand elle sera créée */
-const NET={on:false,gid:'',me:0,first:1,applied:0,poll:null,mq:null,find:0,last:0,done:0,edit:0};
+/* jeu en ligne : pseudos, avatars, salon de joueurs, revanche, micro (Firebase Realtime Database) */
+const ONLINE={db:'https://tocmanchin-default-rtdb.europe-west1.firebasedatabase.app'};
+const NET={on:false,gid:'',me:0,first:1,applied:0,poll:null,mq:null,last:0,done:0,edit:0,res:0,rmWait:0,rmj:0,inviting:0};
+const AVS=['😎','🦁','🐯','🦊','🐼','🐸','🦄','🐵','🤖','👑','🔥','⚽'];
 const dbOn=()=>!!ONLINE.db;
 const esc=t=>String(t).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
 const ost=t=>{const e=$('ost');if(e)e.textContent=t};
@@ -315,49 +317,87 @@ const nkey=n=>n.toLowerCase();
 async function setName(n){n=(n||'').trim();if(!/^[A-Za-z0-9_.]{3,14}$/.test(n)){ost('Pseudo : 3 à 14 caractères (lettres, chiffres, _ ou .)');return}
 if(dbOn()){try{const k=nkey(n),cur=await db('users/'+k);if(cur&&cur.id!==uid()){ost('Ce pseudo est déjà pris 😕');return}
 if(S.name&&nkey(S.name)!==k){try{const o=await db('users/'+nkey(S.name));if(o&&o.id===uid())await db('users/'+nkey(S.name),'DELETE')}catch(e){}}
-await db('users/'+k,'PUT',{id:uid(),name:n,t:Date.now()})}catch(e){ost('Connexion impossible, réessaie.');return}}
+await db('users/'+k,'PUT',{id:uid(),name:n,av:S.av||'😎',t:Date.now()})}catch(e){ost('Connexion impossible, réessaie.');return}}
 S.name=n;NET.edit=0;save();toast('Pseudo enregistré : '+n);renderOnline()}
+function setAv(a){S.av=a;save();if(dbOn()&&S.name)db('users/'+nkey(S.name),'PATCH',{av:a}).catch(()=>{});renderOnline()}
 function openOnline(){renderOnline();scr('online')}
 function renderOnline(){let h='<div class="top"><button class="ic" onclick="toMenu()">‹</button><b>🌐 En ligne</b><span class="pill2">🏆 '+S.wins+'</span></div>';
 if(!dbOn())h+='<div class="rk" style="font-size:22px;text-align:center">Bientôt disponible</div><div class="xpt">Choisis déjà ton pseudo : le jeu en ligne sera activé très prochainement.</div>';
+h+='<div class="sec">Ton avatar</div><div class="shopgrid" style="grid-template-columns:repeat(6,1fr)">'+AVS.map(a=>'<button class="item'+((S.av||'😎')===a?' eq':'')+'" style="padding:4px" onclick="setAv(\''+a+'\')"><i class="sw" style="font-size:26px">'+a+'</i></button>').join('')+'</div>';
 h+='<div class="sec">Ton pseudo</div>';
-if(S.name&&!NET.edit)h+='<div class="rk" style="margin:0 0 8px">@'+esc(S.name)+'</div><button class="btn ghost" style="font-size:14px;padding:8px;max-width:240px" onclick="NET.edit=1;renderOnline()">✏️ Changer de pseudo</button>';
+if(S.name&&!NET.edit)h+='<div class="rk" style="margin:0 0 8px">'+esc(S.av||'😎')+' @'+esc(S.name)+'</div><button class="btn ghost" style="font-size:14px;padding:8px;max-width:240px" onclick="NET.edit=1;renderOnline()">✏️ Changer de pseudo</button>';
 else h+='<input id="nin" maxlength="14" placeholder="TonPseudo" value="'+esc(S.name||'')+'" style="text-transform:none;letter-spacing:1px;font-size:20px"><button class="btn main" onclick="setName($(\'nin\').value)">Valider</button>';
-if(S.name&&dbOn())h+='<button class="btn alt" onclick="findMatch()">🔍 Trouver un adversaire</button><button class="btn gold" onclick="showLB()">🏆 Classement</button>';
+if(S.name&&dbOn())h+='<button class="btn alt" onclick="enterLobby()">👥 Voir les joueurs en ligne</button><button class="btn gold" onclick="showLB()">🏆 Classement</button>';
 h+='<div class="xpt" id="ost" style="min-height:40px;margin-top:8px"></div>';$('online').innerHTML=h}
 async function showLB(){ost('Chargement…');try{const r=await db('scores')||{};const a=Object.values(r).sort((x,y)=>(y.wins||0)-(x.wins||0)).slice(0,20);
 let h='<div class="top"><button class="ic" onclick="renderOnline()">‹</button><b>🏆 Classement</b><span></span></div><div class="sec">Meilleurs joueurs</div>';
-h+=a.length?a.map((x,i)=>'<div class="item" style="flex-direction:row;justify-content:space-between;width:100%;margin-bottom:6px"><b>'+(i+1)+'. @'+esc(x.name)+'</b><small>'+(x.wins||0)+' victoires · '+(x.games||0)+' parties</small></div>').join(''):'<div class="xpt">Aucune partie jouée pour le moment.</div>';
+h+=a.length?a.map((x,i)=>'<div class="item" style="flex-direction:row;justify-content:space-between;width:100%;margin-bottom:6px"><b>'+(i+1)+'. '+esc(x.av||'🙂')+' @'+esc(x.name)+'</b><small>'+(x.wins||0)+' victoires · '+(x.games||0)+' parties</small></div>').join(''):'<div class="xpt">Aucune partie jouée pour le moment.</div>';
 $('online').innerHTML=h}catch(e){ost('Impossible de charger le classement.')}}
-function stopFind(keep){clearInterval(NET.mq);NET.mq=null;NET.find=0;if(!keep&&dbOn()&&S.uid)db('queue/'+S.uid,'DELETE').catch(()=>{})}
-async function findMatch(){if(NET.find||!S.name||!dbOn())return;NET.find=1;ost('Recherche d’un adversaire…');const me=uid(),t0=Date.now();let bz=0;
-const tick=async()=>{if(bz||!NET.find)return;bz=1;try{
-if(Date.now()-t0>60000){stopFind();ost('Personne en ligne pour le moment. Réessaie dans un instant 🙂');return}
-await db('queue/'+me,'PUT',{name:S.name,t:Date.now()});
-const m=await db('matches/'+me);if(m){await db('matches/'+me,'DELETE');stopFind();await joinGame(m.gid);return}
-const q=await db('queue')||{};const o=Object.entries(q).filter(([id,v])=>id!==me&&v&&Date.now()-v.t<6000).sort((a,b)=>a[1].t-b[1].t);
-if(o.length&&o[0][0]>me){const[oid,ov]=o[0],gid=me+'_'+Date.now().toString(36),first=Math.random()<.5?1:2;
-await db('games/'+gid,'PUT',{p1:{id:me,name:S.name},p2:{id:oid,name:ov.name},first,t:Date.now()});
-await db('matches/'+oid,'PUT',{gid});await db('queue/'+me,'DELETE');await db('queue/'+oid,'DELETE');stopFind(true);await joinGame(gid)}
-}catch(e){stopFind();ost('Connexion impossible, réessaie.')}finally{bz=0}};
-NET.mq=setInterval(tick,2000);tick()}
-async function joinGame(gid){const g=await db('games/'+gid);if(!g){ost('Partie introuvable, réessaie.');return}
-NET.on=true;NET.done=0;NET.gid=gid;NET.me=g.p1.id===uid()?1:2;NET.first=g.first;NET.applied=0;NET.last=Date.now();mode='net';
-$('n1').textContent=g.p1.name;$('n2').textContent=g.p2.name;$('pauseb').style.display='none';manche=0;reset();scr('game');sfx.square();
-clearInterval(NET.poll);NET.poll=setInterval(pollGame,900)}
+/* salon : on voit les joueurs présents et on touche un pseudo pour le défier */
+let lobbyOn=0,lbz=0;
+function enterLobby(){if(!S.name||!dbOn())return;lobbyOn=1;NET.inviting=0;scr('online');clearInterval(NET.mq);lobbyTick();NET.mq=setInterval(lobbyTick,1800)}
+function stopLobby(){const was=lobbyOn;lobbyOn=0;clearInterval(NET.mq);NET.mq=null;if(was&&dbOn()&&S.uid)db('queue/'+S.uid,'DELETE').catch(()=>{})}
+async function lobbyTick(){if(lbz||!lobbyOn)return;lbz=1;try{const me=uid();
+await db('queue/'+me,'PUT',{name:S.name,av:S.av||'😎',t:Date.now()});
+const m=await db('matches/'+me);if(m&&m.gid){await db('matches/'+me,'DELETE');stopLobby();await joinGame(m.gid);return}
+const inv=await db('invites/'+me);const q=await db('queue')||{};
+renderLobby(Object.entries(q).filter(([id,v])=>id!==me&&v&&Date.now()-v.t<6000),inv)}catch(e){ost('Connexion impossible…')}finally{lbz=0}}
+function renderLobby(list,inv){if(!lobbyOn)return;let h='<div class="top"><button class="ic" onclick="stopLobby();openOnline()">‹</button><b>👥 Joueurs en ligne</b><span class="pill2">'+esc(S.av||'😎')+' '+esc(S.name)+'</span></div>';
+if(inv&&inv.t&&Date.now()-inv.t<30000)h+='<div class="item eq" style="width:100%;flex-direction:row;justify-content:space-between;margin:10px 0"><b>'+esc(inv.av||'🙂')+' @'+esc(inv.name)+' te défie !</b><span><button class="btn main" style="padding:6px 10px;font-size:14px;width:auto;display:inline-block" onclick="acceptInvite()">Accepter</button> <button class="btn ghost" style="padding:6px 10px;font-size:14px;width:auto;display:inline-block" onclick="declineInvite()">✕</button></span></div>';
+h+='<div class="sec">Touche un pseudo pour le défier</div>';
+h+=list.length?list.map(([id,v])=>'<button class="item" style="flex-direction:row;justify-content:space-between;width:100%;margin-bottom:6px" onclick="challenge(\''+esc(id)+'\')"><b>'+esc(v.av||'🙂')+' @'+esc(v.name)+'</b><small>⚔️ Défier</small></button>').join(''):'<div class="xpt">Aucun autre joueur pour le moment… Envoie le lien à un ami ! 😉</div>';
+h+='<div class="xpt" id="ost" style="min-height:30px;margin-top:8px">'+(NET.inviting?'Invitation envoyée… ⏳':'')+'</div>';$('online').innerHTML=h}
+async function challenge(oid){try{await db('invites/'+oid,'PUT',{from:uid(),name:S.name,av:S.av||'😎',t:Date.now()});NET.inviting=1;ost('Invitation envoyée… ⏳');toast('Invitation envoyée ⏳');setTimeout(()=>{NET.inviting=0},25000)}catch(e){toast('Connexion impossible')}}
+async function acceptInvite(){try{const me=uid(),inv=await db('invites/'+me);if(!inv||Date.now()-inv.t>30000){toast('Invitation expirée');return}
+const gid=me+'_'+Date.now().toString(36),first=Math.random()<.5?1:2;
+await db('games/'+gid,'PUT',{p1:{id:inv.from,name:inv.name,av:inv.av},p2:{id:me,name:S.name,av:S.av||'😎'},first,t:Date.now()});
+await db('matches/'+inv.from,'PUT',{gid});await db('invites/'+me,'DELETE');stopLobby();await joinGame(gid)}catch(e){toast('Connexion impossible')}}
+function declineInvite(){db('invites/'+uid(),'DELETE').catch(()=>{});toast('Invitation refusée')}
+/* partie en ligne */
+async function joinGame(gid){const g=await db('games/'+gid);if(!g){toast('Partie introuvable, réessaie.');return}
+closeRtc();NET.on=true;NET.done=0;NET.rmWait=0;NET.rmj=0;NET.gid=gid;NET.me=g.p1.id===uid()?1:2;NET.first=g.first;NET.applied=0;NET.last=Date.now();mode='net';
+$('n1').textContent=g.p1.name;$('n2').textContent=g.p2.name;$('av1').textContent=g.p1.av||'🙂';$('av2').textContent=g.p2.av||'🙂';$('pauseb').style.display='none';manche=0;reset();scr('game');sfx.square();
+clearInterval(NET.poll);NET.poll=setInterval(pollGame,900);startRtc().catch(()=>{})}
 let pz=0;
 async function pollGame(){if(!NET.on||pz)return;pz=1;try{const g=await db('games/'+NET.gid);if(!g||!NET.on)return;
-if(g.left&&g.left!==uid()&&!over&&!NET.done){forfeit();return}
+if(NET.done){const r=g.rematch;if(r){if(r.by!==uid()){if($('rvb').style.display==='none'){$('rvb').style.display='';toast('⚔️ Ton adversaire veut sa revanche !')}}else if(r.acc&&!NET.rmj){NET.rmj=1;await joinGame(r.gid)}}
+if(NET.rmWait&&!NET.rmj&&Date.now()-NET.rmWait>30000){NET.rmWait=0;toast('Adversaire indisponible 😕')}return}
+if(g.left&&g.left!==uid()&&!over){forfeit();return}
 const mv=g.moves||{};while(mv[NET.applied]){const m=mv[NET.applied];NET.applied++;NET.last=Date.now();if(m.p!==NET.me&&m.p===turn)play(m.i)}
-if(!over&&!NET.done&&turn!==NET.me&&Date.now()-NET.last>50000)forfeit()}catch(e){}finally{pz=0}}
+if(!over&&!NET.done&&turn!==NET.me&&Date.now()-NET.last>50000)forfeit();
+await rtcPoll(g)}catch(e){}finally{pz=0}}
 let sg=0;
 async function sendMove(i){if(over||board[i]||turn!==NET.me||sg)return;sg=1;const n=NET.applied;NET.applied++;NET.last=Date.now();play(i);
 try{await db('games/'+NET.gid+'/moves/'+n,'PUT',{i,p:NET.me})}catch(e){try{await db('games/'+NET.gid+'/moves/'+n,'PUT',{i,p:NET.me})}catch(e2){toast('Connexion perdue 😕')}}finally{sg=0}}
-function forfeit(){if(NET.done)return;over=true;stopTimer();draw();$('eh').textContent='🏆 Adversaire parti : tu gagnes !';$('et').textContent=sc[1]+' – '+sc[2];$('er').textContent=netEnd(true);setTimeout(()=>{$('ove').classList.add('on');sfx.win()},400)}
-function netEnd(win){NET.done=1;clearInterval(NET.poll);let c=0,x=5;if(win){c=30;x=40;S.coins+=c;S.wins++;if(S.wins>=10)giveBadge('wins10')}addXp(x);save();refreshMenu();
-if(dbOn()&&S.name){const k=nkey(S.name);db('scores/'+k).then(r=>{r=r||{};r.name=S.name;r.games=(r.games||0)+1;if(win)r.wins=(r.wins||0)+1;return db('scores/'+k,'PUT',r)}).catch(()=>{})}
-return (win?'+'+c+' 🪙 · ':'')+'+'+x+' XP'}
-function leaveOnline(){clearInterval(NET.poll);stopFind();if(NET.on&&!NET.done&&dbOn()&&NET.gid)db('games/'+NET.gid,'PATCH',{left:uid()}).catch(()=>{});NET.on=false;NET.done=0;sg=0;pz=0;$('pauseb').style.display=''}
+function forfeit(){if(NET.done)return;over=true;stopTimer();draw();netEnd(true);netMsg(1);setTimeout(()=>{$('ove').classList.add('on');sfx.win()},400)}
+function netEnd(win){NET.done=1;let c=0,x=5;if(win){c=30;x=40;S.coins+=c;S.wins++;if(S.wins>=10)giveBadge('wins10')}addXp(x);save();refreshMenu();
+if(dbOn()&&S.name){const k=nkey(S.name);db('scores/'+k).then(r=>{r=r||{};r.name=S.name;r.av=S.av||'😎';r.games=(r.games||0)+1;if(win)r.wins=(r.wins||0)+1;return db('scores/'+k,'PUT',r)}).catch(()=>{})}
+return ''}
+function netMsg(r){NET.res=r;$('eh').textContent=r>0?'Félicitations, tu as djafoul hein !🏆🎉':r<0?'Bêlêlou, tu as perdu hein ! 😂':'Ah ! Match nul, c’était chaud hein !🤝😬';$('et').textContent='';$('er').textContent='';$('dbl').style.display='none';$('nextb').textContent=r>0?'Nouvel adversaire ↻':'Revanche ⚔️';$('rvb').style.display='none'}
+function netNext(){if(NET.res>0){leaveOnline();enterLobby()}else requestRematch()}
+async function requestRematch(){if(!dbOn())return;try{const g=await db('games/'+NET.gid);if(!g)return;
+if(g.rematch&&g.rematch.by!==uid()){acceptRematch();return}
+const gid2=NET.gid.split('~')[0]+'~'+Date.now().toString(36),first=NET.res<0?NET.me:(Math.random()<.5?1:2);
+await db('games/'+gid2,'PUT',{p1:g.p1,p2:g.p2,first,t:Date.now()});await db('games/'+NET.gid+'/rematch','PUT',{gid:gid2,by:uid()});NET.rmWait=Date.now();toast('Revanche demandée ⏳')}catch(e){toast('Connexion impossible')}}
+async function acceptRematch(){try{const g=await db('games/'+NET.gid),r=g&&g.rematch;if(!r)return;await db('games/'+NET.gid+'/rematch','PATCH',{acc:true});await joinGame(r.gid)}catch(e){toast('Connexion impossible')}}
+/* voix : WebRTC, signal échangé par la base */
+let pc=null,mySnd=null,micTrack=null,micOn=false,rcI=0;
+function closeRtc(){try{if(micTrack)micTrack.stop()}catch(e){}try{if(pc)pc.close()}catch(e){}pc=null;mySnd=null;micTrack=null;micOn=false;rcI=0;const b=$('micb');if(b)b.textContent='🎤 Micro : off'}
+async function startRtc(){if(typeof RTCPeerConnection==='undefined')return;closeRtc();const gid=NET.gid,me=NET.me;
+pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+mySnd=pc.addTransceiver('audio',{direction:'sendrecv'}).sender;
+let a=document.getElementById('rtcaudio');if(!a){a=document.createElement('audio');a.id='rtcaudio';a.autoplay=true;a.setAttribute('playsinline','');document.body.appendChild(a)}
+pc.ontrack=e=>{a.srcObject=(e.streams&&e.streams[0])||new MediaStream([e.track]);a.play().catch(()=>{})};
+let ci=0;pc.onicecandidate=e=>{if(e.candidate)db('games/'+gid+'/rtc/c'+me+'/'+(ci++),'PUT',e.candidate.toJSON()).catch(()=>{})};
+if(me===1){const o=await pc.createOffer();await pc.setLocalDescription(o);await db('games/'+gid+'/rtc/offer','PUT',{type:o.type,sdp:o.sdp})}}
+async function rtcPoll(g){if(!pc||!g.rtc)return;const r=g.rtc;try{
+if(NET.me===2&&r.offer&&!pc.remoteDescription){await pc.setRemoteDescription(r.offer);const an=await pc.createAnswer();await pc.setLocalDescription(an);await db('games/'+NET.gid+'/rtc/answer','PUT',{type:an.type,sdp:an.sdp})}
+if(NET.me===1&&r.answer&&!pc.remoteDescription)await pc.setRemoteDescription(r.answer);
+if(pc.remoteDescription){const cs=r['c'+(3-NET.me)]||{},arr=Array.isArray(cs)?cs:Object.values(cs);while(rcI<arr.length){const c=arr[rcI++];if(c)await pc.addIceCandidate(c).catch(()=>{})}}}catch(e){}}
+async function toggleMic(){if(!pc){toast('Micro indisponible sur cet appareil');return}
+if(micOn){try{micTrack.stop()}catch(e){}try{await mySnd.replaceTrack(null)}catch(e){}micTrack=null;micOn=false;$('micb').textContent='🎤 Micro : off';return}
+try{const st=await navigator.mediaDevices.getUserMedia({audio:true});micTrack=st.getAudioTracks()[0];await mySnd.replaceTrack(micTrack);micOn=true;$('micb').textContent='🎙️ Micro : on';const a=document.getElementById('rtcaudio');if(a)a.play().catch(()=>{})}catch(e){toast('Micro refusé ou indisponible 🎤')}}
+function leaveOnline(){clearInterval(NET.poll);stopLobby();closeRtc();if(NET.on&&!NET.done&&dbOn()&&NET.gid)db('games/'+NET.gid,'PATCH',{left:uid()}).catch(()=>{});NET.on=false;NET.done=0;sg=0;pz=0;$('pauseb').style.display='';$('micb').style.display='none';$('rvb').style.display='none';$('av1').textContent='A';$('av2').textContent='I'}
 applyEquip();refreshMenu();
 
 /* publicité */
@@ -371,37 +411,6 @@ function showAd(cb){const f=$('adfull'),b=$('adc');let n=ADS.seconds;f.classList
 const iv=setInterval(()=>{n--;if(n>0)b.textContent='Patientez '+n+' s…';else{clearInterval(iv);b.disabled=false;b.textContent='Fermer ✕ et continuer'}},1000);
 b.onclick=()=>{f.classList.remove('on');cb()}}
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
-// Système universel de coupure audio pour les publicités
-const GestionAudioPub = {
-    elementsEnPause: [],
-    contextesEnPause: [],
-
-    couper: function() {
-        this.elementsEnPause = [];
-        this.contextesEnPause = [];
-
-        // 1. Met en pause toutes les balises <audio> ou <video> en cours de lecture
-        document.querySelectorAll('audio, video').forEach(media => {
-            if (!media.paused) {
-                media.pause();
-                this.elementsEnPause.push(media);
-            }
-        });
-
-        // 2. Suspend l'AudioContext (si vos sons sont générés par code JS)
-        if (window.audioCtx && window.audioCtx.state === 'running') {
-            window.audioCtx.suspend();
-            this.contextesEnPause.push(window.audioCtx);
-        }
-    },
-
-    retablir: function() {
-        // Relance uniquement les sons qui jouaient avant la pub
-        this.elementsEnPause.forEach(media => media.play());
-        this.contextesEnPause.forEach(ctx => ctx.resume());
-    }
-};
-
 </script>
 </body>
 </html>
