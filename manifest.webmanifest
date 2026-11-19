@@ -1,0 +1,17 @@
+{
+  "name": "Tocmanchin",
+  "short_name": "Tocmanchin",
+  "description": "Le jeu de la cour : forme des carrés avec tes points et bloque ton adversaire.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#cdbcff",
+  "theme_color": "#7b3fe4",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png"},
+    {"src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}
