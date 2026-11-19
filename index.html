@@ -371,6 +371,37 @@ function showAd(cb){const f=$('adfull'),b=$('adc');let n=ADS.seconds;f.classList
 const iv=setInterval(()=>{n--;if(n>0)b.textContent='Patientez '+n+' s…';else{clearInterval(iv);b.disabled=false;b.textContent='Fermer ✕ et continuer'}},1000);
 b.onclick=()=>{f.classList.remove('on');cb()}}
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+// Système universel de coupure audio pour les publicités
+const GestionAudioPub = {
+    elementsEnPause: [],
+    contextesEnPause: [],
+
+    couper: function() {
+        this.elementsEnPause = [];
+        this.contextesEnPause = [];
+
+        // 1. Met en pause toutes les balises <audio> ou <video> en cours de lecture
+        document.querySelectorAll('audio, video').forEach(media => {
+            if (!media.paused) {
+                media.pause();
+                this.elementsEnPause.push(media);
+            }
+        });
+
+        // 2. Suspend l'AudioContext (si vos sons sont générés par code JS)
+        if (window.audioCtx && window.audioCtx.state === 'running') {
+            window.audioCtx.suspend();
+            this.contextesEnPause.push(window.audioCtx);
+        }
+    },
+
+    retablir: function() {
+        // Relance uniquement les sons qui jouaient avant la pub
+        this.elementsEnPause.forEach(media => media.play());
+        this.contextesEnPause.forEach(ctx => ctx.resume());
+    }
+};
+
 </script>
 </body>
 </html>
