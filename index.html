@@ -85,7 +85,7 @@ background:radial-gradient(circle at 28% 30%,#00c2a8 0 9px,transparent 10px),rad
 .xpb{width:100%;height:14px;background:#fff;border-radius:8px;overflow:hidden;margin:8px 0 4px}.xpb i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2))}
 .xpt{font-weight:800;font-size:13px;text-align:center}
 .toast{position:fixed;top:calc(env(safe-area-inset-top,0px) + 14px);left:50%;transform:translate(-50%,-160%);background:#2a1a5e;color:#fff;padding:10px 18px;border-radius:20px;font-weight:900;z-index:20;transition:transform .35s;box-shadow:0 4px 12px rgba(0,0,0,.3);text-align:center;max-width:90%}.toast.on{transform:translate(-50%,0)}
-.tile.dy{grid-column:1/3;background:linear-gradient(135deg,#ff9a1a,#ff3d8b)}
+.tile.dy{background:linear-gradient(135deg,#ff9a1a,#ff3d8b)}.tile.ol{background:linear-gradient(135deg,#2f6bff,#7b3fe4)}.tile b{font-size:17px}.tile.big b{font-size:26px}
 .fxp{animation:fxp 1s ease-out forwards;transform-box:fill-box;transform-origin:center}
 @keyframes fxp{from{transform:translate(0,0) scale(.3);opacity:1}to{transform:translate(var(--dx),var(--dy)) scale(1.3);opacity:0}}
 .ad{width:100%;max-width:340px;min-height:50px;margin:8px 0 2px;border-radius:10px;background:repeating-linear-gradient(45deg,#ffffff88 0 8px,#ffffff44 8px 16px);border:2px dashed #7b3fe4aa;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#5b4a9a}
@@ -111,6 +111,7 @@ background:radial-gradient(circle at 28% 30%,#00c2a8 0 9px,transparent 10px),rad
 <button class="tile tl" onclick="start('pvp')"><span class="ti">👥</span><b>2 JOUEURS</b><small>sur le même écran</small></button>
 <button class="tile or" onclick="start('ai',4)"><span class="ti">🎓</span><b>DÉFI</b><small>Professeur · 10 s</small></button>
 <button class="tile dy" onclick="start('daily')"><span class="ti">📅</span><b>DÉFI DU JOUR</b><small id="dtl">Nouvelle grille</small></button>
+<button class="tile ol" onclick="openOnline()"><span class="ti">🌐</span><b>EN LIGNE</b><small>contre d’autres joueurs</small></button>
 </div>
 <div class="rbs">
 <button class="rb" id="sndb" onclick="toggleSnd()">🔊</button>
@@ -133,6 +134,7 @@ background:radial-gradient(circle at 28% 30%,#00c2a8 0 9px,transparent 10px),rad
 </div>
 
 <div id="shop" class="screen"></div>
+<div id="online" class="screen" style="overflow-y:auto;justify-content:flex-start"></div>
 <div id="profile" class="screen"></div>
 <div class="toast" id="toast"></div>
 
@@ -170,10 +172,10 @@ let Gearn=0,lastC=0,mode,lvl,board,sc,turn,won,over,busy,paused,manche=0,hintI=-
 const $=e=>document.getElementById(e);
 function show(w){$('home').style.display=w==='home'?'flex':'none';$('levels').style.display=w==='levels'?'flex':'none'}
 function scr(n){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));$(n).classList.add('on')}
-function toMenu(){pause(false);busy=true;stopTimer();refreshMenu();$('ove').classList.remove('on');scr('menu');show('home')}
-function start(m,l){mode=m;lvl=l;manche=0;$('n2').textContent=m==='ai'?'Invité (IA)':m==='daily'?'Obstacles':'Joueur 2';reset();scr('game')}
-function reset(){manche++;board=Array(N).fill(0);sc=[0,0,0];won=[];turn=Math.random()<.5?1:2;over=false;busy=false;Gearn=0;$('er').textContent='';$('dbl').style.display='none';$('nextb').textContent=mode==='daily'?'Réessayer ↻':'Manche suivante ▶';if(mode==='daily'){turn=1;dailySetup()}hintI=-1;last=-1;$('ove').classList.remove('on');$('hintb').style.display=ADS.enabled&&ADS.rewarded?'':'none';draw();startTurn();if(mode==='ai'&&turn===2){busy=true;setTimeout(ai,900)}}
-function next(){const go=()=>reset();if(ADS.enabled&&manche%ADS.interEvery===0)showAd(go);else go()}
+function toMenu(){pause(false);busy=true;stopTimer();refreshMenu();leaveOnline();$('ove').classList.remove('on');scr('menu');show('home')}
+function start(m,l){leaveOnline();mode=m;lvl=l;manche=0;$('n2').textContent=m==='ai'?'Invité (IA)':m==='daily'?'Obstacles':'Joueur 2';reset();scr('game')}
+function reset(){manche++;board=Array(N).fill(0);sc=[0,0,0];won=[];turn=Math.random()<.5?1:2;over=false;busy=false;Gearn=0;$('er').textContent='';$('dbl').style.display='none';$('nextb').textContent=mode==='daily'?'Réessayer ↻':'Manche suivante ▶';if(mode==='daily'){turn=1;dailySetup()}if(mode==='net')turn=NET.first;hintI=-1;last=-1;$('ove').classList.remove('on');$('hintb').style.display=ADS.enabled&&ADS.rewarded&&mode!=='net'?'':'none';draw();startTurn();if(mode==='ai'&&turn===2){busy=true;setTimeout(ai,900)}}
+function next(){const go=()=>mode==='net'?(leaveOnline(),openOnline(),findMatch()):reset();if(ADS.enabled&&manche%ADS.interEvery===0)showAd(go);else go()}
 function pause(v){paused=v;$('ovp').classList.toggle('on',v)}
 function count(p,i){return AT[i].filter(q=>q.every(k=>k===i||board[k]===p))}
 function alive(q){const a=q.some(k=>board[k]===1),b=q.some(k=>board[k]===2);if(a&&b)return false;return !(q.every(k=>board[k]===1)||q.every(k=>board[k]===2))}
@@ -209,7 +211,7 @@ $('c1').classList.toggle('act',!over&&turn===1);$('c2').classList.toggle('act',!
 $('info').textContent=mode==='daily'?'Défi du jour · '+sc[1]+' / '+DQ.target+' carrés':'Manche '+manche+' · '+(won.length)+' / '+SQ.length+' carrés';
 $('msg').style.color=COL[turn];
 $('msg').textContent=mode==='daily'?(over?'Terminé':'Il reste '+DQ.left+' coup'+(DQ.left>1?'s':'')+' ✏️'):over?'Partie terminée':(turn===1?'À toi, Joueur 1 ✏️':(mode==='ai'?'L’invité réfléchit…':'À toi, Joueur 2 ✏️'))}
-$('board').addEventListener('click',e=>{const i=e.target.dataset&&e.target.dataset.i;if(i==null||busy||paused||over)return;play(+i)});
+$('board').addEventListener('click',e=>{const i=e.target.dataset&&e.target.dataset.i;if(i==null||busy||paused||over)return;if(mode==='net'){sendMove(+i);return}play(+i)});
 
 /* son & musique */
 let ac,snd=true,music=true,mt=null,step=0;
@@ -231,8 +233,8 @@ document.addEventListener('click',e=>{if(e.target.closest('.btn,.ic,.tile,.rb'))
 
 /* minuteur 30 s (Licence, Professeur) */
 let dl=0,tiv=null,lastTick=-1;
-const TL=()=>lvl>=4?10:30;
-const timed=()=>(mode==='ai'&&lvl>=3);
+const TL=()=>mode==='net'?30:lvl>=4?10:30;
+const timed=()=>mode==='net'||(mode==='ai'&&lvl>=3);
 function stopTimer(){clearInterval(tiv);tiv=null;['1','2'].forEach(n=>{$('tb'+n).style.width='0';$('tt'+n).textContent=''})}
 function startTurn(){stopTimer();if(over||!timed()||(mode==='ai'&&turn===2))return;dl=Date.now()+TL()*1000;lastTick=-1;tiv=setInterval(tick,200);tick()}
 function tick(){if(paused){dl+=200;return}const left=Math.max(0,dl-Date.now()),s=Math.ceil(left/1000);
@@ -240,7 +242,7 @@ $('tb'+turn).style.width=(left/(TL()*10))+'%';$('tb'+turn).style.background=s<=5
 if(s<=5&&s>0&&s!==lastTick){lastTick=s;sfx.tick(s)}
 if(left<=0){stopTimer();timeout()}}
 function timeout(){const em=[];board.forEach((v,i)=>{if(!v)em.push(i)});const g=em.filter(i=>AT[i].some(alive)),l=g.length?g:em,i=l[Math.random()*l.length|0];
-play(i)}
+if(mode==='net'){if(turn===NET.me)sendMove(i);else setTimeout(()=>{if(NET.on&&!over&&turn!==NET.me&&Date.now()-NET.last>12000)forfeit()},15000);return}play(i)}
 
 /* progression : pièces, rangs, badges, boutique, défi du jour */
 const SK='tocmanchin-save-v1';
@@ -265,7 +267,7 @@ const curStreak=()=>(S.lastDaily===today()||S.lastDaily===ydate())?S.streak:0;
 function refreshMenu(){$('pc').textContent='🪙 '+S.coins;$('pr').textContent='🎓 '+RANKS[rankOf(S.xp)][0];$('dtl').textContent=(S.lastDaily===today()?'✅ Fait · ':'Nouvelle grille · ')+'🔥 '+curStreak()}
 function applyEquip(){COL[1]=SHOP.dot.find(x=>x[0]===S.eq.dot)[2];document.documentElement.style.setProperty('--p1',COL[1]);TH=SHOP.bg.find(x=>x[0]===S.eq.bg)[2];document.querySelector('.sheet').style.background=TH.paper;if(board)draw()}
 function fx(sq){const it=SHOP.fx.find(x=>x[0]===S.eq.fx);if(!it||!it[2])return;const g=$('fxg');sq.forEach(q=>{const c=q.map(pt),cx=O+c.reduce((a,p)=>a+p[0],0)/4*G,cy=O+c.reduce((a,p)=>a+p[1],0)/4*G;for(let k=0;k<8;k++){const a=Math.random()*6.28,d=40+Math.random()*50,t=document.createElementNS('http://www.w3.org/2000/svg','text');t.setAttribute('x',cx);t.setAttribute('y',cy);t.setAttribute('class','fxp');t.setAttribute('font-size','22');t.setAttribute('text-anchor','middle');t.style.setProperty('--dx',Math.cos(a)*d+'px');t.style.setProperty('--dy',Math.sin(a)*d+'px');t.textContent=it[2][k%it[2].length];g.appendChild(t);setTimeout(()=>t.remove(),1100)}})}
-function rewardEnd(){if(mode!=='ai')return '';const win=sc[1]>sc[2];let c=Gearn,x=2*Gearn;
+function rewardEnd(){if(mode==='net')return netEnd(sc[NET.me]>sc[3-NET.me]);if(mode!=='ai')return '';const win=sc[1]>sc[2];let c=Gearn,x=2*Gearn;
 if(win){const b=[10,20,30,40,50][lvl],xp=20+lvl*5;c+=b;x+=xp;S.coins+=b;addXp(xp);S.wins++;if(S.lastWin!==today()){S.lastWin=today();S.coins+=20;c+=20}if(lvl===4)giveBadge('prof');if(S.wins>=10)giveBadge('wins10')}
 save();refreshMenu();lastC=c;$('dbl').style.display=(c>0&&ADS.enabled)?'':'none';return '+'+c+' 🪙 · +'+x+' XP'}
 function dblCoins(){showAd(()=>{S.coins+=lastC;save();refreshMenu();$('er').textContent+=' · doublé ×2 ! 🎉';$('dbl').style.display='none'})}
@@ -297,10 +299,65 @@ h+='<button class="item'+(eq?' eq':'')+'" onclick="buy(\''+k+'\',\''+it[0]+'\')"
 $('shop').innerHTML=h}
 function buy(k,id){const it=SHOP[k].find(x=>x[0]===id);if(!S.own.includes(id)){if(S.coins<it[3]){toast('Pas assez de pièces 🪙');return}S.coins-=it[3];S.own.push(id);sfx.square()}S.eq[k]=id;save();applyEquip();renderShop();refreshMenu()}
 function renderProfile(){const r=rankOf(S.xp),nx=RANKS[r+1],base=RANKS[r][1],pct=nx?Math.round((S.xp-base)/(nx[1]-base)*100):100;
-let h='<div class="top"><button class="ic" onclick="toMenu()">‹</button><b>👤 Mon profil</b><span class="pill2">🪙 '+S.coins+'</span></div><div class="rk">🎓 '+RANKS[r][0]+'</div><div class="xpb"><i style="width:'+pct+'%"></i></div><div class="xpt">'+S.xp+' XP'+(nx?' · prochain rang : '+nx[0]+' à '+nx[1]+' XP':' · rang maximum !')+'</div><div class="sec">Badges</div><div class="shopgrid">';
+let h='<div class="top"><button class="ic" onclick="toMenu()">‹</button><b>👤 Mon profil</b><span class="pill2">🪙 '+S.coins+'</span></div><div class="rk">🎓 '+RANKS[r][0]+'</div>'+(S.name?'<div class="xpt">@'+esc(S.name)+'</div>':'<button class="btn ghost" style="font-size:14px;padding:8px;max-width:240px" onclick="openOnline()">Choisir un pseudo</button>')+'<div class="xpb"><i style="width:'+pct+'%"></i></div><div class="xpt">'+S.xp+' XP'+(nx?' · prochain rang : '+nx[0]+' à '+nx[1]+' XP':' · rang maximum !')+'</div><div class="sec">Badges</div><div class="shopgrid">';
 Object.entries(BADGES).forEach(([id,b])=>{h+='<div class="item'+(S.badges.includes(id)?' eq':' off')+'"><i class="sw">'+b[0]+'</i><b>'+b[1]+'</b></div>'});
 h+='</div><div class="sec">Statistiques</div><div class="xpt">Victoires : '+S.wins+' · Série du défi : 🔥 '+curStreak()+' jour(s)</div>';
 $('profile').innerHTML=h}
+/* jeu en ligne : pseudos, adversaire aléatoire, classement (Firebase Realtime Database) */
+const ONLINE={db:''}; /* ← colle ici l’adresse de ta base Firebase quand elle sera créée */
+const NET={on:false,gid:'',me:0,first:1,applied:0,poll:null,mq:null,find:0,last:0,done:0,edit:0};
+const dbOn=()=>!!ONLINE.db;
+const esc=t=>String(t).replace(/[&<>"']/g,c=>'&#'+c.charCodeAt(0)+';');
+const ost=t=>{const e=$('ost');if(e)e.textContent=t};
+async function db(path,method,body){const r=await fetch(ONLINE.db.replace(/\/$/,'')+'/'+path+'.json',{method:method||'GET',body:body===undefined?undefined:JSON.stringify(body)});if(!r.ok)throw new Error('db '+r.status);return r.json()}
+function uid(){if(!S.uid){S.uid=Math.random().toString(36).slice(2,8)+Date.now().toString(36).slice(-4);save()}return S.uid}
+const nkey=n=>n.toLowerCase();
+async function setName(n){n=(n||'').trim();if(!/^[A-Za-z0-9_.]{3,14}$/.test(n)){ost('Pseudo : 3 à 14 caractères (lettres, chiffres, _ ou .)');return}
+if(dbOn()){try{const k=nkey(n),cur=await db('users/'+k);if(cur&&cur.id!==uid()){ost('Ce pseudo est déjà pris 😕');return}
+if(S.name&&nkey(S.name)!==k){try{const o=await db('users/'+nkey(S.name));if(o&&o.id===uid())await db('users/'+nkey(S.name),'DELETE')}catch(e){}}
+await db('users/'+k,'PUT',{id:uid(),name:n,t:Date.now()})}catch(e){ost('Connexion impossible, réessaie.');return}}
+S.name=n;NET.edit=0;save();toast('Pseudo enregistré : '+n);renderOnline()}
+function openOnline(){renderOnline();scr('online')}
+function renderOnline(){let h='<div class="top"><button class="ic" onclick="toMenu()">‹</button><b>🌐 En ligne</b><span class="pill2">🏆 '+S.wins+'</span></div>';
+if(!dbOn())h+='<div class="rk" style="font-size:22px;text-align:center">Bientôt disponible</div><div class="xpt">Choisis déjà ton pseudo : le jeu en ligne sera activé très prochainement.</div>';
+h+='<div class="sec">Ton pseudo</div>';
+if(S.name&&!NET.edit)h+='<div class="rk" style="margin:0 0 8px">@'+esc(S.name)+'</div><button class="btn ghost" style="font-size:14px;padding:8px;max-width:240px" onclick="NET.edit=1;renderOnline()">✏️ Changer de pseudo</button>';
+else h+='<input id="nin" maxlength="14" placeholder="TonPseudo" value="'+esc(S.name||'')+'" style="text-transform:none;letter-spacing:1px;font-size:20px"><button class="btn main" onclick="setName($(\'nin\').value)">Valider</button>';
+if(S.name&&dbOn())h+='<button class="btn alt" onclick="findMatch()">🔍 Trouver un adversaire</button><button class="btn gold" onclick="showLB()">🏆 Classement</button>';
+h+='<div class="xpt" id="ost" style="min-height:40px;margin-top:8px"></div>';$('online').innerHTML=h}
+async function showLB(){ost('Chargement…');try{const r=await db('scores')||{};const a=Object.values(r).sort((x,y)=>(y.wins||0)-(x.wins||0)).slice(0,20);
+let h='<div class="top"><button class="ic" onclick="renderOnline()">‹</button><b>🏆 Classement</b><span></span></div><div class="sec">Meilleurs joueurs</div>';
+h+=a.length?a.map((x,i)=>'<div class="item" style="flex-direction:row;justify-content:space-between;width:100%;margin-bottom:6px"><b>'+(i+1)+'. @'+esc(x.name)+'</b><small>'+(x.wins||0)+' victoires · '+(x.games||0)+' parties</small></div>').join(''):'<div class="xpt">Aucune partie jouée pour le moment.</div>';
+$('online').innerHTML=h}catch(e){ost('Impossible de charger le classement.')}}
+function stopFind(keep){clearInterval(NET.mq);NET.mq=null;NET.find=0;if(!keep&&dbOn()&&S.uid)db('queue/'+S.uid,'DELETE').catch(()=>{})}
+async function findMatch(){if(NET.find||!S.name||!dbOn())return;NET.find=1;ost('Recherche d’un adversaire…');const me=uid(),t0=Date.now();let bz=0;
+const tick=async()=>{if(bz||!NET.find)return;bz=1;try{
+if(Date.now()-t0>60000){stopFind();ost('Personne en ligne pour le moment. Réessaie dans un instant 🙂');return}
+await db('queue/'+me,'PUT',{name:S.name,t:Date.now()});
+const m=await db('matches/'+me);if(m){await db('matches/'+me,'DELETE');stopFind();await joinGame(m.gid);return}
+const q=await db('queue')||{};const o=Object.entries(q).filter(([id,v])=>id!==me&&v&&Date.now()-v.t<6000).sort((a,b)=>a[1].t-b[1].t);
+if(o.length&&o[0][0]>me){const[oid,ov]=o[0],gid=me+'_'+Date.now().toString(36),first=Math.random()<.5?1:2;
+await db('games/'+gid,'PUT',{p1:{id:me,name:S.name},p2:{id:oid,name:ov.name},first,t:Date.now()});
+await db('matches/'+oid,'PUT',{gid});await db('queue/'+me,'DELETE');await db('queue/'+oid,'DELETE');stopFind(true);await joinGame(gid)}
+}catch(e){stopFind();ost('Connexion impossible, réessaie.')}finally{bz=0}};
+NET.mq=setInterval(tick,2000);tick()}
+async function joinGame(gid){const g=await db('games/'+gid);if(!g){ost('Partie introuvable, réessaie.');return}
+NET.on=true;NET.done=0;NET.gid=gid;NET.me=g.p1.id===uid()?1:2;NET.first=g.first;NET.applied=0;NET.last=Date.now();mode='net';
+$('n1').textContent=g.p1.name;$('n2').textContent=g.p2.name;$('pauseb').style.display='none';manche=0;reset();scr('game');sfx.square();
+clearInterval(NET.poll);NET.poll=setInterval(pollGame,900)}
+let pz=0;
+async function pollGame(){if(!NET.on||pz)return;pz=1;try{const g=await db('games/'+NET.gid);if(!g||!NET.on)return;
+if(g.left&&g.left!==uid()&&!over&&!NET.done){forfeit();return}
+const mv=g.moves||{};while(mv[NET.applied]){const m=mv[NET.applied];NET.applied++;NET.last=Date.now();if(m.p!==NET.me&&m.p===turn)play(m.i)}
+if(!over&&!NET.done&&turn!==NET.me&&Date.now()-NET.last>50000)forfeit()}catch(e){}finally{pz=0}}
+let sg=0;
+async function sendMove(i){if(over||board[i]||turn!==NET.me||sg)return;sg=1;const n=NET.applied;NET.applied++;NET.last=Date.now();play(i);
+try{await db('games/'+NET.gid+'/moves/'+n,'PUT',{i,p:NET.me})}catch(e){try{await db('games/'+NET.gid+'/moves/'+n,'PUT',{i,p:NET.me})}catch(e2){toast('Connexion perdue 😕')}}finally{sg=0}}
+function forfeit(){if(NET.done)return;over=true;stopTimer();draw();$('eh').textContent='🏆 Adversaire parti : tu gagnes !';$('et').textContent=sc[1]+' – '+sc[2];$('er').textContent=netEnd(true);setTimeout(()=>{$('ove').classList.add('on');sfx.win()},400)}
+function netEnd(win){NET.done=1;clearInterval(NET.poll);let c=0,x=5;if(win){c=30;x=40;S.coins+=c;S.wins++;if(S.wins>=10)giveBadge('wins10')}addXp(x);save();refreshMenu();
+if(dbOn()&&S.name){const k=nkey(S.name);db('scores/'+k).then(r=>{r=r||{};r.name=S.name;r.games=(r.games||0)+1;if(win)r.wins=(r.wins||0)+1;return db('scores/'+k,'PUT',r)}).catch(()=>{})}
+return (win?'+'+c+' 🪙 · ':'')+'+'+x+' XP'}
+function leaveOnline(){clearInterval(NET.poll);stopFind();if(NET.on&&!NET.done&&dbOn()&&NET.gid)db('games/'+NET.gid,'PATCH',{left:uid()}).catch(()=>{});NET.on=false;NET.done=0;sg=0;pz=0;$('pauseb').style.display=''}
 applyEquip();refreshMenu();
 
 /* publicité */
